@@ -1,18 +1,21 @@
 import Icon from 'react-native-vector-icons/Ionicons'
 import { StackScreenProps } from "@react-navigation/stack"
-import { Image, View, StyleSheet, Dimensions, ScrollView, Text } from 'react-native'
+import { Image, View, StyleSheet, Dimensions, ScrollView, Text, ActivityIndicator, TouchableOpacity } from 'react-native'
 import { RootStackParams } from "../navigation/Navigation"
 import { useMovieDetails } from '../hooks/useMovieDetails'
+import { MovieDetails } from '../components/MovieDetails'
+import { useNavigation } from '@react-navigation/native'
 
 const screenHeight = Dimensions.get('screen').height
 
-interface Props extends StackScreenProps<RootStackParams, 'DetailScreen'> {}
+interface Props extends StackScreenProps<RootStackParams, 'DetailScreen'> { }
 
 export const DetailScreen = ({ route }: Props) => {
+    const navigation = useNavigation()
     const movie = route.params
     const uri = `https://image.tmdb.org/t/p/w500/${movie.poster_path}`
 
-    useMovieDetails(movie.id)
+    const { cast, isLoading, movieFull } = useMovieDetails(movie.id)
 
     return (
         <ScrollView>
@@ -30,13 +33,15 @@ export const DetailScreen = ({ route }: Props) => {
                 <Text style={styles.title}>{movie.title}</Text>
             </View>
 
-            <View style={styles.marginContainer}>
-                <Icon 
-                    name='star-outline'
-                    color='grey'
-                    size={20}
-                />
-            </View>
+            {
+                isLoading
+                    ? <ActivityIndicator size={30} color='grey' style={{ marginTop: 20 }} />
+                    : <MovieDetails movieFull={movieFull!} cast={cast} />
+            }
+
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+                <Icon name='arrow-back-outline' color='white' size={50} />
+            </TouchableOpacity >
         </ScrollView>
     )
 }
@@ -60,7 +65,7 @@ const styles = StyleSheet.create({
         flex: 1,
         overflow: 'hidden',
         borderBottomEndRadius: 25,
-        borderBottomStartRadius: 25 
+        borderBottomStartRadius: 25
     },
     imagePoster: {
         flex: 1
@@ -76,5 +81,12 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 20,
         fontWeight: 'bold'
+    },
+    backButton: {
+        position: 'absolute',
+        zIndex: 999,
+        elevation: 9,
+        top: 20,
+        left: 5
     }
 })
